@@ -97,7 +97,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="focus-ring text-ui-fg-subtle px-4 transition-all duration-150 rounded-md focus:text-ui-fg-base absolute right-0 top-3"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="focus-ring inline-flex items-center justify-center min-h-11 min-w-11 text-ui-fg-subtle transition-all duration-150 rounded-md focus:text-ui-fg-base absolute right-0 inset-y-0"
             >
               {showPassword ? <Eye /> : <EyeOff />}
             </button>

@@ -89,7 +89,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           variant === "secondary" &&
             "bg-page text-ink border border-border hover:bg-surface",
           variant === "transparent" && "bg-transparent hover:bg-surface",
-          size === "small" && "h-8 px-3",
+          // min-h-11 (44px) meets the approved minimum interaction target
+          // even though "small" keeps a visually compact px-3.
+          size === "small" && "min-h-11 px-3",
           // 44px meets the approved minimum interaction target for
           // normal customer-facing controls (blueprint section F).
           size === "medium" && "h-11 px-4",
@@ -182,7 +184,9 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       <button
         ref={ref}
         className={clsx(
-          "focus-ring inline-flex items-center justify-center rounded-md p-2 hover:bg-surface transition-colors duration-150 ease-out disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-ink-muted",
+          // min-w/h-11 (44px) keeps the tappable target at the approved
+          // minimum while the icon itself stays whatever size the caller passes.
+          "focus-ring inline-flex items-center justify-center rounded-md p-2 min-h-11 min-w-11 hover:bg-surface transition-colors duration-150 ease-out disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-ink-muted",
           className
         )}
         {...props}

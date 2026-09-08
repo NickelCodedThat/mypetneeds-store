@@ -89,7 +89,7 @@ const Title: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <button
           onClick={close}
           aria-label="Close"
-          className="focus-ring rounded-md p-1"
+          className="focus-ring inline-flex items-center justify-center rounded-md p-1 min-h-11 min-w-11"
           data-testid="close-modal-button"
         >
           <X size={20} />
