@@ -15,6 +15,8 @@ import {
   deleteProductCategoriesWorkflow,
   deleteProductOptionsWorkflow,
   deleteProductsWorkflow,
+  updateProductsWorkflow,
+  updateShippingOptionTypesWorkflow,
   updateStockLocationsWorkflow,
   updateStoresWorkflow,
 } from "@medusajs/medusa/core-flows"
@@ -50,12 +52,13 @@ const STARTER_OPTION_TITLES = ["Size", "Color"]
 
 const MYPETNEEDS_CATEGORIES = ["Dogs", "Cats", "Care & Travel"] as const
 
+const US_SHIPPING_OPTION_TYPE_DESCRIPTION = "Standard development shipping"
+
 const MYPETNEEDS_PRODUCTS: MyPetNeedsProduct[] = [
   {
     title: "Orthopedic Dog Bed",
     handle: "orthopedic-dog-bed",
-    description:
-      "Supportive foam dog bed designed to cushion joints for a comfortable rest, day or night.",
+    description: "An everyday dog bed available in Small, Medium, and Large sizes.",
     category: "Dogs",
     variants: [
       { title: "Small", sku: "MPN-BED-ORTHO-SM", size: "Small", price: 59 },
@@ -66,8 +69,7 @@ const MYPETNEEDS_PRODUCTS: MyPetNeedsProduct[] = [
   {
     title: "Adjustable Everyday Harness",
     handle: "adjustable-everyday-harness",
-    description:
-      "A comfortable, adjustable harness for daily walks with a secure clip and padded straps.",
+    description: "An adjustable dog harness available in Small, Medium, and Large sizes.",
     category: "Dogs",
     variants: [
       { title: "Small", sku: "MPN-HARNESS-EVERY-SM", size: "Small", price: 19 },
@@ -78,71 +80,70 @@ const MYPETNEEDS_PRODUCTS: MyPetNeedsProduct[] = [
   {
     title: "Slow Feeder Bowl",
     handle: "slow-feeder-bowl",
-    description:
-      "A ridged feeding bowl that slows down fast eaters to help with digestion and portion pacing.",
+    description: "A feeding bowl designed with a slow-feeder format for everyday mealtime use.",
     category: "Dogs",
     variants: [{ title: "Standard", sku: "MPN-BOWL-SLOWFEED", size: "Standard", price: 16 }],
   },
   {
     title: "Durable Rope Toy",
     handle: "durable-rope-toy",
-    description: "A tough woven rope toy built for tugging, chewing, and fetch.",
+    description: "A rope toy for everyday dog play.",
     category: "Dogs",
     variants: [{ title: "Standard", sku: "MPN-TOY-ROPE", size: "Standard", price: 12 }],
   },
   {
     title: "Cozy Cat Cave Bed",
     handle: "cozy-cat-cave-bed",
-    description: "An enclosed, soft-sided cave bed that gives cats a warm, private place to curl up.",
+    description: "A cave-style bed for cats.",
     category: "Cats",
     variants: [{ title: "Standard", sku: "MPN-BED-CAVECAT", size: "Standard", price: 34 }],
   },
   {
     title: "Interactive Teaser Wand",
     handle: "interactive-teaser-wand",
-    description: "A wand toy with a feather attachment for interactive, movement-based play.",
+    description: "A wand toy for interactive play with cats.",
     category: "Cats",
     variants: [{ title: "Standard", sku: "MPN-TOY-WAND", size: "Standard", price: 9 }],
   },
   {
     title: "Ceramic Cat Bowl",
     handle: "ceramic-cat-bowl",
-    description: "A weighted ceramic bowl that stays put during mealtime and is easy to clean.",
+    description: "A ceramic bowl for cat feeding.",
     category: "Cats",
     variants: [{ title: "Standard", sku: "MPN-BOWL-CERAMIC-CAT", size: "Standard", price: 14 }],
   },
   {
     title: "Litter Catching Mat",
     handle: "litter-catching-mat",
-    description: "A textured mat placed outside the litter box to trap stray litter before it spreads.",
+    description: "A mat placed near the litter box.",
     category: "Cats",
     variants: [{ title: "Standard", sku: "MPN-MAT-LITTER", size: "Standard", price: 18 }],
   },
   {
     title: "Pet Travel Water Bottle",
     handle: "pet-travel-water-bottle",
-    description: "A leak-resistant bottle with an attached trough for watering pets on the go.",
+    description: "A water bottle for pet travel use.",
     category: "Care & Travel",
     variants: [{ title: "Standard", sku: "MPN-TRAVEL-BOTTLE", size: "Standard", price: 15 }],
   },
   {
     title: "Everyday Grooming Brush",
     handle: "everyday-grooming-brush",
-    description: "A gentle slicker brush for regular at-home grooming and de-shedding.",
+    description: "A grooming brush for everyday use.",
     category: "Care & Travel",
     variants: [{ title: "Standard", sku: "MPN-GROOM-BRUSH", size: "Standard", price: 11 }],
   },
   {
     title: "Waste Bag Dispenser",
     handle: "waste-bag-dispenser",
-    description: "A clip-on dispenser that holds a roll of waste bags for walks.",
+    description: "A dispenser for pet waste bags.",
     category: "Care & Travel",
     variants: [{ title: "Standard", sku: "MPN-WASTE-DISPENSER", size: "Standard", price: 8 }],
   },
   {
     title: "Waterproof Car Seat Cover",
     handle: "waterproof-car-seat-cover",
-    description: "A waterproof cover that protects a car's back seat during pet travel.",
+    description: "A car seat cover for pet travel.",
     category: "Care & Travel",
     variants: [{ title: "Standard", sku: "MPN-CARSEAT-COVER", size: "Standard", price: 45 }],
   },
@@ -286,12 +287,12 @@ export default async function seedMyPetNeeds({ container }: ExecArgs) {
   // --- Shipping option usable for local dev checkout in the US zone ---
   const { data: shippingOptions } = await query.graph({
     entity: "shipping_option",
-    fields: ["id", "name", "service_zone_id"],
+    fields: ["id", "name", "service_zone_id", "type.id", "type.description"],
   })
-  const hasUsShippingOption = shippingOptions.some(
+  const usShippingOption: any = shippingOptions.find(
     (o: any) => usServiceZone && o.service_zone_id === usServiceZone.id
   )
-  if (usServiceZone && !hasUsShippingOption) {
+  if (usServiceZone && !usShippingOption) {
     await createShippingOptionsWorkflow(container).run({
       input: [
         {
@@ -302,7 +303,7 @@ export default async function seedMyPetNeeds({ container }: ExecArgs) {
           shipping_profile_id: shippingProfile.id,
           type: {
             label: "Standard",
-            description: "Ship in 2-3 business days.",
+            description: US_SHIPPING_OPTION_TYPE_DESCRIPTION,
             code: "standard",
           },
           prices: [
@@ -317,8 +318,19 @@ export default async function seedMyPetNeeds({ container }: ExecArgs) {
       ],
     })
     logger.info("Created Standard Shipping option for the United States zone.")
+  } else if (usShippingOption && usShippingOption.type?.description !== US_SHIPPING_OPTION_TYPE_DESCRIPTION) {
+    // Update the existing shipping_option_type row in place (by id) rather than
+    // passing an inline `type` object to updateShippingOptionsWorkflow, which
+    // creates a new orphaned type row instead of updating the linked one.
+    await updateShippingOptionTypesWorkflow(container).run({
+      input: {
+        selector: { id: usShippingOption.type.id },
+        update: { description: US_SHIPPING_OPTION_TYPE_DESCRIPTION },
+      },
+    })
+    logger.info("Updated US shipping option description to remove the invented delivery-time claim.")
   } else {
-    logger.info("US shipping option already exists. Skipping.")
+    logger.info("US shipping option already exists with the correct description. Skipping.")
   }
 
   // --- Remove the stock DTC starter catalog (clothing demo products/categories) ---
@@ -412,10 +424,12 @@ export default async function seedMyPetNeeds({ container }: ExecArgs) {
   // --- MyPetNeeds development catalog: products, variants, SKUs, USD pricing ---
   const { data: existingProducts } = await query.graph({
     entity: "product",
-    fields: ["id", "handle"],
+    fields: ["id", "handle", "description"],
   })
-  const existingHandles = new Set(existingProducts.map((p: any) => p.handle))
-  const productsToCreate = MYPETNEEDS_PRODUCTS.filter((p) => !existingHandles.has(p.handle))
+  const existingProductByHandle = new Map<string, any>(
+    existingProducts.map((p: any) => [p.handle, p])
+  )
+  const productsToCreate = MYPETNEEDS_PRODUCTS.filter((p) => !existingProductByHandle.has(p.handle))
 
   if (productsToCreate.length) {
     await createProductsWorkflow(container).run({
@@ -443,6 +457,24 @@ export default async function seedMyPetNeeds({ container }: ExecArgs) {
     logger.info(`Created ${productsToCreate.length} MyPetNeeds product(s).`)
   } else {
     logger.info("All MyPetNeeds products already exist. Skipping product creation.")
+  }
+
+  // --- Reconcile descriptions for products that already existed with outdated copy ---
+  const descriptionUpdates = MYPETNEEDS_PRODUCTS.filter((p) => {
+    const existing = existingProductByHandle.get(p.handle)
+    return existing && existing.description !== p.description
+  }).map((p) => ({
+    id: existingProductByHandle.get(p.handle).id,
+    description: p.description,
+  }))
+
+  if (descriptionUpdates.length) {
+    await updateProductsWorkflow(container).run({
+      input: { products: descriptionUpdates },
+    })
+    logger.info(`Updated descriptions for ${descriptionUpdates.length} existing MyPetNeeds product(s).`)
+  } else {
+    logger.info("All existing MyPetNeeds product descriptions are already up to date. Skipping.")
   }
 
   // --- Inventory: 25 units per variant at the MyPetNeeds Fulfillment Center ---
