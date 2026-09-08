@@ -1,6 +1,6 @@
 # MyPetNeeds — Medusa Ecommerce Store
 
-**Gate 0 — Foundation.** This is the baseline Medusa v2 ecommerce environment for MyPetNeeds, bootstrapped from the official [Medusa DTC Starter](https://github.com/medusajs/dtc-starter). It is intentionally unbranded and unmodified beyond what's needed to run locally — no MyPetNeeds branding, catalog, or custom modules yet.
+**Gate 0 — Foundation** bootstrapped the baseline Medusa v2 environment from the official [Medusa DTC Starter](https://github.com/medusajs/dtc-starter). **Gate 1 — Commerce Foundation** configured the store as MyPetNeeds (US market, USD) and replaced the starter's clothing demo catalog with a MyPetNeeds pet-supplies development catalog. There is still no final branding, design system, or real supplier/inventory data — this is commerce configuration and development data only.
 
 See [MEDUSA-LEARNING-JOURNAL.md](./MEDUSA-LEARNING-JOURNAL.md) for Nick's learning notes on how the pieces fit together.
 
@@ -65,7 +65,7 @@ If you don't want to install Volta, any Node satisfying `^20.19.0 || >=22.12.0` 
    ```
    (No password is needed with Homebrew's default local "trust" auth. `.env` is git-ignored — never commit it.)
 
-5. **Run migrations** (this also seeds baseline store/region/product data):
+5. **Run migrations** (this also runs the starter's baseline migration seed — store/region/stock-location/demo-product data):
    ```bash
    cd apps/backend
    pnpm medusa db:migrate
@@ -76,7 +76,12 @@ If you don't want to install Volta, any Node satisfying `^20.19.0 || >=22.12.0` 
    pnpm medusa user -e you@example.com -p <your-password>
    ```
 
-7. **Configure the storefront environment:**
+7. **Seed the MyPetNeeds development catalog** (configures the store as MyPetNeeds/US/USD, removes the starter's clothing demo catalog, and creates the MyPetNeeds product catalog — see [Gate 1 seed](#gate-1--commerce-foundation) below):
+   ```bash
+   pnpm --filter @dtc/backend seed
+   ```
+
+8. **Configure the storefront environment:**
    ```bash
    cp apps/storefront/.env.template apps/storefront/.env.local
    ```
@@ -84,7 +89,7 @@ If you don't want to install Volta, any Node satisfying `^20.19.0 || >=22.12.0` 
    ```
    NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_...
    ```
-   (The DTC Starter's seed data already creates a default publishable key tied to the default sales channel, so there's usually one waiting in Admin already.)
+   (The starter's baseline seed already creates a default publishable key tied to the default sales channel, so there's usually one waiting in Admin already. `NEXT_PUBLIC_DEFAULT_REGION` defaults to `us` to match the MyPetNeeds catalog's USD-only pricing.)
 
 ## Running it
 
@@ -109,6 +114,19 @@ pnpm --filter @dtc/storefront dev   # Next.js storefront
 | Medusa backend (API) | http://localhost:9000 |
 | Medusa Admin dashboard | http://localhost:9000/app |
 
+## Gate 1 — Commerce Foundation
+
+`apps/backend/src/scripts/seed-mypetneeds.ts` (run via `pnpm --filter @dtc/backend seed`, or `medusa exec ./src/scripts/seed-mypetneeds.ts` from `apps/backend`) is an **idempotent** development seed — safe to re-run any time, including on a database that's already been seeded. Every step checks existing state first (by name, handle, or SKU) and only creates or changes what's missing, so re-running it makes no further changes once the store is configured. It:
+
+- Renames the store to **MyPetNeeds** and sets **USD** as the default currency (EUR stays supported for the starter's original Europe region)
+- Creates a **United States** region (USD) with a US tax region and the system/manual payment provider, alongside the starter's existing Europe region
+- Repurposes the starter's single stock location as **MyPetNeeds Fulfillment Center** (Austin, TX) and adds a **United States** fulfillment service zone with a **Standard Shipping** option ($7 flat, usable in local checkout testing)
+- Removes the starter's clothing demo catalog (products, categories, and their now-orphaned global "Size"/"Color" options) via `deleteProductsWorkflow` / `deleteProductCategoriesWorkflow` / `deleteProductOptionsWorkflow` — no raw SQL
+- Creates the **Dogs**, **Cats**, and **Care & Travel** categories and a **New Arrivals** collection
+- Creates 12 MyPetNeeds development products (16 variants total) with unique `MPN-*` SKUs, USD pricing, and 25 units of tracked inventory per variant at the MyPetNeeds Fulfillment Center — see the product list in [MEDUSA-LEARNING-JOURNAL.md](./MEDUSA-LEARNING-JOURNAL.md) or Admin's Products list
+
+No product images are set — the storefront's existing placeholder-image component covers this until real product photography exists in a later gate.
+
 ## Environment files (not committed)
 
 - `apps/backend/.env` — database URL, CORS origins, JWT/cookie secrets. Template: `apps/backend/.env.template`.
@@ -116,16 +134,27 @@ pnpm --filter @dtc/storefront dev   # Next.js storefront
 
 Both are covered by `.gitignore`. Never commit real secrets or API keys.
 
-## Validation performed for Gate 0
+## Validation performed
 
+**Gate 0:**
 - `pnpm install` — clean install across the workspace
 - `pnpm medusa db:migrate` — migrations + seed data applied to a fresh local PostgreSQL database
 - `pnpm medusa user` — Admin user created
 - Backend dev server boots and serves the Admin dashboard at `/app`; login verified
 - Storefront dev server boots, renders the homepage, and successfully calls the Store API (regions, collections, product categories all returned `200`)
 - PostgreSQL data verified to persist across a `brew services restart postgresql@16`
-- `pnpm build` run for the backend as a type/build validation pass (see repo history / CI for current results)
+- `pnpm build` run for the backend as a type/build validation pass
+
+**Gate 1:**
+- `pnpm --filter @dtc/backend seed` run twice in a row — second run made zero changes, confirming idempotency
+- `pnpm build` (backend and storefront) and `pnpm lint` (backend) — clean
+- `pnpm lint` (storefront) — same pre-existing upstream errors as Gate 0 (unused vars/`any`/`@ts-ignore` in starter source under `src/lib/data/cart.ts` and `src/modules/layout/components/language-select/`); nothing new introduced
+- Storefront `pnpm build` statically generated all category, collection, and product detail pages using live MyPetNeeds data from the backend
+- Full storefront smoke test: browsed a category, opened a product, selected a variant, added to cart, and stepped through checkout up to (not including) placing an order — shipping and manual/system payment both resolved correctly
+- Admin smoke test: logged in, confirmed the MyPetNeeds store name, all 12 products with correct SKUs/prices/inventory, categories, the United States region, and the MyPetNeeds Fulfillment Center
+
+No automated test suite exists yet in either app (the backend's Jest config has no spec files, and the storefront ships without one) — this is a pre-existing starter condition, not something introduced here.
 
 ## Scope note
 
-Gate 0 is a clean, unmodified baseline only. No MyPetNeeds branding, catalog, Stripe integration, marketplace/vendor functionality, or custom Medusa modules have been added yet — that begins in a later gate.
+This repository holds commerce configuration and a development catalog only. No final branding/design system, Stripe integration, customer accounts, marketplace/vendor functionality, or custom Medusa modules have been added yet — that begins in a later gate.
