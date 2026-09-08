@@ -2,7 +2,75 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/*
+ * MyPetNeeds semantic design tokens (Gate 2B.1).
+ * Source of truth: GATE-2-UIUX-BLUEPRINT.md, section 4 "Design system".
+ * These are mapped into Tailwind via `theme.extend.colors` in tailwind.config.js
+ * so components consume semantic utilities (bg-brand, text-ink, border-border, ...)
+ * rather than these custom properties directly.
+ */
+:root {
+  --color-page: oklch(1 0 0);
+  --color-surface: oklch(0.97 0.008 242);
+  --color-surface-strong: oklch(0.94 0.012 242);
+  --color-ink: oklch(0.22 0.025 242);
+  --color-ink-muted: oklch(0.45 0.025 242);
+  --color-border: oklch(0.86 0.012 242);
+  --color-brand: oklch(0.48 0.13 242);
+  --color-brand-hover: oklch(0.42 0.12 242);
+  --color-accent: oklch(0.72 0.14 48);
+  --color-success: oklch(0.46 0.11 150);
+  --color-warning: oklch(0.78 0.14 83);
+  --color-error: oklch(0.48 0.18 28);
+  --color-sale: oklch(0.5 0.18 28);
+  --color-focus: oklch(0.52 0.16 242);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+  }
+
+  ::selection {
+    background-color: var(--color-brand);
+    color: white;
+  }
+}
+
+/*
+ * Reduced motion baseline: shorten rather than disable, so state changes
+ * (accordion open/close, drawer visibility, loading indicators) remain
+ * understandable instead of jumping with zero transition feedback.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer utilities {
+  /*
+   * Shared accessible focus treatment (blueprint section 4 "Interaction and
+   * motion" + section 13 "Accessibility requirements"): a 2px brand ring with
+   * a 2px page-color offset, visible on white and neutral surfaces alike.
+   * Uses :focus-visible so pointer clicks on non-editable controls don't show
+   * a ring unless the browser's own heuristic says it should (text inputs
+   * still show it on click, per the :focus-visible spec).
+   */
+  .focus-ring {
+    outline: none;
+  }
+
+  .focus-ring:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-page), 0 0 0 4px var(--color-focus);
+  }
+
   /* Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -35,9 +103,9 @@
   select:-webkit-autofill,
   select:-webkit-autofill:hover,
   select:-webkit-autofill:focus {
-    border: 1px solid #212121;
-    -webkit-text-fill-color: #212121;
-    -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+    border: 1px solid var(--color-ink);
+    -webkit-text-fill-color: var(--color-ink);
+    -webkit-box-shadow: 0 0 0px 1000px var(--color-page) inset;
     transition: background-color 5000s ease-in-out 0s;
   }
 
@@ -108,5 +176,61 @@
 
   .text-3xl-semi {
     @apply text-[32px] leading-[44px] font-semibold;
+  }
+
+  /*
+   * MyPetNeeds type scale (Gate 2B.1 foundation).
+   * Source: GATE-2-UIUX-BLUEPRINT.md, section 4 "Typography".
+   * Mobile size applies by default; `small:` (1024px, this project's custom
+   * "desktop" breakpoint) applies the desktop size. These are additive -
+   * existing `.text-*` utilities above are untouched and remain in use until
+   * a later slice migrates a given page to this scale.
+   */
+  .text-display {
+    @apply text-[34px] leading-[38px] font-bold small:text-[48px] small:leading-[52px];
+  }
+
+  .text-h1 {
+    @apply text-[32px] leading-[36px] font-bold small:text-[40px] small:leading-[44px];
+  }
+
+  .text-h2 {
+    @apply text-[26px] leading-[32px] font-bold small:text-[30px] small:leading-[36px];
+  }
+
+  .text-h3 {
+    @apply text-[20px] leading-[26px] font-[650] small:text-[22px] small:leading-[28px];
+  }
+
+  .text-body-lg {
+    @apply text-[18px] leading-[28px] font-[450];
+  }
+
+  .text-body {
+    @apply text-base leading-6 font-[450];
+  }
+
+  .text-supporting {
+    @apply text-sm leading-5 font-[450];
+  }
+
+  .text-label {
+    @apply text-[13px] leading-[18px] font-[650];
+  }
+
+  .text-product-title {
+    @apply text-[15px] leading-[22px] font-semibold line-clamp-2;
+  }
+
+  .text-price {
+    @apply text-[15px] leading-[22px] font-[650] [font-variant-numeric:tabular-nums];
+  }
+
+  .text-button {
+    @apply text-[15px] leading-5 font-[650];
+  }
+
+  .text-nav {
+    @apply text-[15px] leading-5 font-semibold;
   }
 }

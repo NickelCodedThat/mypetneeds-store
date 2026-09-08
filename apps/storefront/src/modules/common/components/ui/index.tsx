@@ -8,6 +8,7 @@ import {
   TableHTMLAttributes,
   TdHTMLAttributes,
   ThHTMLAttributes,
+  useId,
 } from "react"
 
 // TODO: Add Toaster component back when needed for notifications
@@ -81,15 +82,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         className={clsx(
-          "inline-flex gap-2 items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-          variant === "primary" && "bg-black text-white hover:bg-gray-800",
+          "focus-ring text-button inline-flex gap-2 items-center justify-center rounded-md transition-colors duration-150 ease-out disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-surface-strong disabled:text-ink-muted disabled:shadow-none disabled:border-transparent",
+          variant === "primary" && "bg-brand text-white hover:bg-brand-hover",
           variant === "secondary" &&
-            "bg-white text-black border border-gray-200 hover:bg-gray-50",
-          variant === "transparent" && "bg-transparent hover:bg-gray-100",
-          size === "small" && "h-8 px-3 text-sm",
-          size === "medium" && "h-10 px-4",
-          size === "large" && "h-12 px-6 text-lg",
+            "bg-page text-ink border border-border hover:bg-surface",
+          variant === "transparent" && "bg-transparent hover:bg-surface",
+          size === "small" && "h-8 px-3",
+          // 44px meets the approved minimum interaction target for
+          // normal customer-facing controls (blueprint section F).
+          size === "medium" && "h-11 px-4",
+          size === "large" && "h-12 px-6",
           className
         )}
         {...props}
@@ -178,7 +182,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       <button
         ref={ref}
         className={clsx(
-          "inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors focus-visible:outline-none focus-visible:ring-2",
+          "focus-ring inline-flex items-center justify-center rounded-md p-2 hover:bg-surface transition-colors duration-150 ease-out disabled:pointer-events-none disabled:cursor-not-allowed disabled:text-ink-muted",
           className
         )}
         {...props}
@@ -198,7 +202,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelProps>(
     return (
       <label
         ref={ref}
-        className={clsx("text-sm font-medium", className)}
+        className={clsx("text-supporting font-semibold text-ink", className)}
         {...props}
       >
         {children}
@@ -211,21 +215,35 @@ Label.displayName = "Label"
 // Input Component
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   label?: string
+  error?: string
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, ...props }, ref) => {
+  ({ className, label, id, error, "aria-describedby": ariaDescribedBy, ...props }, ref) => {
+    const generatedId = useId()
+    const inputId = id ?? generatedId
+    const errorId = error ? `${inputId}-error` : undefined
+    const describedBy = [errorId, ariaDescribedBy].filter(Boolean).join(" ") || undefined
+
     return (
       <div className="flex flex-col gap-1">
-        {label && <Label>{label}</Label>}
+        {label && <Label htmlFor={inputId}>{label}</Label>}
         <input
           ref={ref}
+          id={inputId}
+          aria-invalid={props["aria-invalid"] ?? (error ? true : undefined)}
+          aria-describedby={describedBy}
           className={clsx(
-            "flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            "focus-ring flex h-11 w-full rounded-md border border-border bg-page px-3 py-2 text-body text-ink placeholder:text-ink-muted disabled:cursor-not-allowed disabled:bg-surface-strong disabled:text-ink-muted aria-[invalid=true]:border-error",
             className
           )}
           {...props}
         />
+        {error && (
+          <p id={errorId} role="alert" className="text-supporting text-error">
+            {error}
+          </p>
+        )}
       </div>
     )
   }
@@ -377,19 +395,22 @@ type RadioGroupItemProps = InputHTMLAttributes<HTMLInputElement> & {
 
 const RadioGroupItem = forwardRef<HTMLInputElement, RadioGroupItemProps>(
   ({ className, label, id, ...props }, ref) => {
+    const generatedId = useId()
+    const itemId = id ?? generatedId
+
     return (
       <div className="flex items-center gap-2">
         <input
           ref={ref}
           type="radio"
-          id={id}
+          id={itemId}
           className={clsx(
-            "h-4 w-4 border-gray-300 text-gray-900 focus:ring-gray-900",
+            "focus-ring h-4 w-4 border-border text-brand",
             className
           )}
           {...props}
         />
-        {label && <Label htmlFor={id}>{label}</Label>}
+        {label && <Label htmlFor={itemId}>{label}</Label>}
       </div>
     )
   }
@@ -407,19 +428,22 @@ type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, label, id, ...props }, ref) => {
+    const generatedId = useId()
+    const checkboxId = id ?? generatedId
+
     return (
       <div className="flex items-center gap-2">
         <input
           ref={ref}
           type="checkbox"
-          id={id}
+          id={checkboxId}
           className={clsx(
-            "h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900",
+            "focus-ring h-4 w-4 rounded border-border text-brand",
             className
           )}
           {...props}
         />
-        {label && <Label htmlFor={id}>{label}</Label>}
+        {label && <Label htmlFor={checkboxId}>{label}</Label>}
       </div>
     )
   }

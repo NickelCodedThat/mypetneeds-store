@@ -33,6 +33,29 @@ module.exports = {
           80: "#1F2937",
           90: "#111827",
         },
+        // MyPetNeeds semantic tokens (Gate 2B.1). Values live in
+        // src/styles/globals.css `:root` as the source of truth; see
+        // GATE-2-UIUX-BLUEPRINT.md section 4 "Color roles".
+        page: "var(--color-page)",
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          strong: "var(--color-surface-strong)",
+        },
+        ink: {
+          DEFAULT: "var(--color-ink)",
+          muted: "var(--color-ink-muted)",
+        },
+        border: "var(--color-border)",
+        brand: {
+          DEFAULT: "var(--color-brand)",
+          hover: "var(--color-brand-hover)",
+        },
+        accent: "var(--color-accent)",
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        error: "var(--color-error)",
+        sale: "var(--color-sale)",
+        focus: "var(--color-focus)",
       },
       borderRadius: {
         none: "0px",
@@ -41,6 +64,10 @@ module.exports = {
         rounded: "8px",
         large: "16px",
         circle: "9999px",
+        // Gate 2B.1 shape tokens (blueprint section 4 "Shape language").
+        // `rounded-md` (Tailwind default 6px) already covers inputs/buttons;
+        // `sheet` is reserved here for drawers/bottom sheets in a later slice.
+        sheet: "12px",
       },
       maxWidth: {
         "8xl": "100rem",
@@ -58,14 +85,17 @@ module.exports = {
         "3xl": "2rem",
       },
       fontFamily: {
+        // Gate 2B.1: Spline Sans via next/font/google, exposed as the
+        // `--font-spline-sans` variable set on <html> in app/layout.tsx.
+        // Fallback stack matches GATE-2-UIUX-BLUEPRINT.md section 4
+        // "Typography".
         sans: [
-          "Inter",
+          "var(--font-spline-sans)",
+          "ui-sans-serif",
+          "system-ui",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
-          "Roboto",
-          "Helvetica Neue",
-          "Ubuntu",
           "sans-serif",
         ],
       },
