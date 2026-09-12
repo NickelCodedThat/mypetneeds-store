@@ -15,6 +15,7 @@ import {
   deleteProductCategoriesWorkflow,
   deleteProductOptionsWorkflow,
   deleteProductsWorkflow,
+  updateProductCategoriesWorkflow,
   updateProductsWorkflow,
   updateShippingOptionTypesWorkflow,
   updateStockLocationsWorkflow,
@@ -42,15 +43,31 @@ type MyPetNeedsProduct = {
   title: string
   handle: string
   description: string
-  category: "Dogs" | "Cats" | "Care & Travel"
+  category: MyPetNeedsCategoryName
   variants: MyPetNeedsVariant[]
+}
+
+type MyPetNeedsCategoryConfig = {
+  name: string
+  handle: string
 }
 
 const STARTER_PRODUCT_HANDLES = ["t-shirt", "sweatshirt", "sweatpants", "shorts"]
 const STARTER_CATEGORY_NAMES = ["Shirts", "Sweatshirts", "Pants", "Merch"]
 const STARTER_OPTION_TITLES = ["Size", "Color"]
 
-const MYPETNEEDS_CATEGORIES = ["Dogs", "Cats", "Care & Travel"] as const
+// Canonical handles for the three primary categories. Medusa's automatic
+// slug generation would otherwise turn "Care & Travel" into the
+// URL-unfriendly "care-&-travel" (a literal ampersand does not resolve
+// correctly through Next.js's dynamic category route), so these are pinned
+// explicitly rather than left to the default slugifier.
+const MYPETNEEDS_CATEGORY_CONFIG = [
+  { name: "Dogs", handle: "dogs" },
+  { name: "Cats", handle: "cats" },
+  { name: "Care & Travel", handle: "care-travel" },
+] as const satisfies readonly MyPetNeedsCategoryConfig[]
+
+type MyPetNeedsCategoryName = (typeof MYPETNEEDS_CATEGORY_CONFIG)[number]["name"]
 
 const US_SHIPPING_OPTION_TYPE_DESCRIPTION = "Standard development shipping"
 
@@ -382,26 +399,60 @@ export default async function seedMyPetNeeds({ container }: ExecArgs) {
   // --- MyPetNeeds categories ---
   const { data: existingCategories } = await query.graph({
     entity: "product_category",
-    fields: ["id", "name"],
+    fields: ["id", "name", "handle"],
   })
-  const categoryIdByName = new Map<string, string>(
-    existingCategories.map((c: any) => [c.name, c.id])
+  const categoryByName = new Map<string, { id: string; handle: string }>(
+    existingCategories.map((c: any) => [c.name, { id: c.id, handle: c.handle }])
   )
-  const missingCategoryNames = MYPETNEEDS_CATEGORIES.filter((name) => !categoryIdByName.has(name))
-  if (missingCategoryNames.length) {
+
+  const missingCategories = MYPETNEEDS_CATEGORY_CONFIG.filter(
+    (config) => !categoryByName.has(config.name)
+  )
+  if (missingCategories.length) {
     const { result } = await createProductCategoriesWorkflow(container).run({
       input: {
-        product_categories: missingCategoryNames.map((name) => ({
-          name,
+        product_categories: missingCategories.map((config) => ({
+          name: config.name,
+          handle: config.handle,
           is_active: true,
         })),
       },
     })
-    result.forEach((c) => categoryIdByName.set(c.name, c.id))
-    logger.info(`Created categories: ${missingCategoryNames.join(", ")}`)
+    result.forEach((c) => categoryByName.set(c.name, { id: c.id, handle: c.handle }))
+    logger.info(`Created categories: ${missingCategories.map((c) => c.name).join(", ")}`)
   } else {
-    logger.info("MyPetNeeds categories already exist. Skipping.")
+    logger.info("MyPetNeeds categories already exist. Skipping creation.")
   }
+
+  // Reconcile any existing category whose handle has drifted from the
+  // canonical value (e.g. an auto-slugified "care-&-travel" from before
+  // canonical handles were pinned). Updates in place via the category's own
+  // id, so the id and its product relationships are untouched.
+  const categoriesNeedingHandleFix = MYPETNEEDS_CATEGORY_CONFIG.filter((config) => {
+    const existing = categoryByName.get(config.name)
+    return !!existing && existing.handle !== config.handle
+  })
+  if (categoriesNeedingHandleFix.length) {
+    for (const config of categoriesNeedingHandleFix) {
+      const existing = categoryByName.get(config.name)!
+      await updateProductCategoriesWorkflow(container).run({
+        input: {
+          selector: { id: existing.id },
+          update: { handle: config.handle },
+        },
+      })
+      logger.info(
+        `Reconciled category "${config.name}" handle: "${existing.handle}" -> "${config.handle}"`
+      )
+      categoryByName.set(config.name, { id: existing.id, handle: config.handle })
+    }
+  } else {
+    logger.info("MyPetNeeds category handles already canonical. Skipping.")
+  }
+
+  const categoryIdByName = new Map<string, string>(
+    Array.from(categoryByName.entries()).map(([name, c]) => [name, c.id])
+  )
 
   // --- A single "New Arrivals" collection to demonstrate collection support ---
   const { data: existingCollections } = await query.graph({
