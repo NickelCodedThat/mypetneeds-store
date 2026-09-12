@@ -1,58 +1,79 @@
 import { Suspense } from "react"
 
-import { listLocales } from "@lib/data/locales"
-import { getLocale } from "@lib/data/locale-actions"
+import { listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
-import { StoreRegion } from "@medusajs/types"
+import { ShoppingBag } from "@medusajs/icons"
+import { HttpTypes, StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import User from "@modules/common/icons/user"
 import CartButton from "@modules/layout/components/cart-button"
+import PrimaryNav from "@modules/layout/components/primary-nav"
 import SideMenu from "@modules/layout/components/side-menu"
+import Wordmark from "@modules/layout/components/wordmark"
+
+// Approved Gate 2 primary taxonomy, in blueprint order. Categories are still
+// resolved from live Medusa data (name + handle) rather than hard-coded, so
+// this list only decides which categories are promoted to primary nav.
+const PRIMARY_CATEGORY_NAMES = ["Dogs", "Cats", "Care & Travel"]
 
 export default async function Nav() {
-  const [regions, locales, currentLocale] = await Promise.all([
+  const [regions, categories] = await Promise.all([
     listRegions().then((regions: StoreRegion[]) => regions),
-    listLocales(),
-    getLocale(),
+    listCategories(),
   ])
 
+  const primaryCategories = PRIMARY_CATEGORY_NAMES.map((name) =>
+    categories?.find((category) => category.name === name)
+  ).filter((category): category is HttpTypes.StoreProductCategory => !!category)
+
   return (
-    <div className="sticky top-0 inset-x-0 z-50 group">
-      <header className="relative h-16 mx-auto border-b duration-200 bg-white border-ui-border-base">
-        <nav className="content-container txt-xsmall-plus text-ui-fg-subtle flex items-center justify-between w-full h-full text-small-regular">
-          <div className="flex-1 basis-0 h-full flex items-center">
-            <div className="h-full">
-              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} />
+    <div className="sticky top-0 inset-x-0 z-50">
+      <header className="relative h-16 small:h-[72px] bg-page border-b border-border">
+        <nav className="content-container flex items-center justify-between w-full h-full gap-4">
+          <div className="flex items-center gap-1 flex-1 small:flex-none">
+            <div className="small:hidden">
+              <SideMenu categories={primaryCategories} regions={regions} />
             </div>
+            <Wordmark />
           </div>
 
-          <div className="flex items-center h-full">
+          <div className="hidden small:flex flex-1 justify-center">
+            <PrimaryNav categories={primaryCategories} />
+          </div>
+
+          <div className="flex items-center gap-1 small:gap-2 justify-end flex-1 small:flex-none">
             <LocalizedClientLink
-              href="/"
-              className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase"
-              data-testid="nav-store-link"
+              href="/account"
+              className="focus-ring hidden small:inline-flex items-center min-h-11 px-2 rounded-md text-nav text-ink-muted hover:text-ink"
+              data-testid="nav-account-link"
             >
-              Medusa Store
+              Account
             </LocalizedClientLink>
-          </div>
-
-          <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
-            <div className="hidden small:flex items-center gap-x-6 h-full">
-              <LocalizedClientLink
-                className="hover:text-ui-fg-base"
-                href="/account"
-                data-testid="nav-account-link"
-              >
-                Account
-              </LocalizedClientLink>
-            </div>
+            <LocalizedClientLink
+              href="/account"
+              aria-label="Account"
+              className="focus-ring small:hidden inline-flex items-center justify-center min-h-11 min-w-11 rounded-md text-ink-muted hover:text-ink"
+              data-testid="nav-account-link-mobile"
+            >
+              <User size={22} />
+            </LocalizedClientLink>
             <Suspense
               fallback={
                 <LocalizedClientLink
-                  className="hover:text-ui-fg-base flex gap-2"
                   href="/cart"
+                  aria-label="Cart, 0 items"
+                  className="focus-ring inline-flex items-center min-h-11 px-2 rounded-md text-nav text-ink-muted hover:text-ink"
                   data-testid="nav-cart-link"
                 >
-                  Cart (0)
+                  <span className="hidden small:inline" aria-hidden="true">
+                    Cart (0)
+                  </span>
+                  <span
+                    className="small:hidden inline-flex items-center gap-1"
+                    aria-hidden="true"
+                  >
+                    <ShoppingBag />0
+                  </span>
                 </LocalizedClientLink>
               }
             >
