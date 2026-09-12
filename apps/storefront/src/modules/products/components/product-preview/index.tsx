@@ -81,7 +81,7 @@ export default function ProductPreview({
         {/* Plain text, not a heading: catalog page heading hierarchy is a
             2B.5 concern, not a per-card decision. */}
         <p
-          className="text-product-title text-ink min-h-[44px] group-hover:text-brand transition-colors duration-150 ease-out"
+          className="text-product-title text-ink min-h-[44px] line-clamp-2 group-hover:text-brand transition-colors duration-150 ease-out"
           data-testid="product-title"
         >
           {product.title}
