@@ -5,7 +5,7 @@ import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
 import { HttpTypes, StoreRegion } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { SortOptions } from "@modules/store/components/sort-control"
 import { parseOptionValueIds } from "@lib/util/product-option-filters"
 
 type Props = {

@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 
 import { parseOptionValueIds } from "@lib/util/product-option-filters"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { SortOptions } from "@modules/store/components/sort-control"
 import StoreTemplate from "@modules/store/templates"
 
 export const metadata: Metadata = {
