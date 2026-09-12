@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 
-import InteractiveLink from "@modules/common/components/interactive-link"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 export const metadata: Metadata = {
   title: "404",
@@ -15,7 +15,12 @@ export default function NotFound() {
         The cart you tried to access does not exist. Clear your cookies and try
         again.
       </p>
-      <InteractiveLink href="/">Go to frontpage</InteractiveLink>
+      <LocalizedClientLink
+        href="/"
+        className="focus-ring inline-flex items-center min-h-11 px-4 rounded-md bg-brand text-white hover:bg-brand-hover"
+      >
+        Go to homepage
+      </LocalizedClientLink>
     </div>
   )
 }

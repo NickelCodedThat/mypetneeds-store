@@ -28,7 +28,7 @@ const PrimaryNav = ({ categories }: PrimaryNavProps) => {
             href={href}
             aria-current={isActive ? "page" : undefined}
             className={clx(
-              "focus-ring text-nav h-full inline-flex items-center border-b-2 transition-colors duration-150 ease-out",
+              "focus-ring text-nav h-full min-w-11 px-1 inline-flex items-center justify-center border-b-2 transition-colors duration-150 ease-out",
               isActive
                 ? "border-brand text-ink"
                 : "border-transparent text-ink-muted hover:text-ink hover:border-border"

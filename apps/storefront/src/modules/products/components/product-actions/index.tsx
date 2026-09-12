@@ -1,7 +1,7 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
-import { useIntersection } from "@lib/hooks/use-in-view"
+import { useHasPassedViewport } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
@@ -115,7 +115,7 @@ export default function ProductActions({
     }
 
     router.replace(pathname + "?" + params.toString())
-  }, [selectedVariant, isValidVariant])
+  }, [selectedVariant, isValidVariant, pathname, router, searchParams])
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {
@@ -143,7 +143,7 @@ export default function ProductActions({
 
   const actionsRef = useRef<HTMLDivElement>(null)
 
-  const inView = useIntersection(actionsRef, "0px")
+  const hasPassedActions = useHasPassedViewport(actionsRef)
 
   // add the selected variant to the cart
   const handleAddToCart = async () => {
@@ -232,7 +232,7 @@ export default function ProductActions({
 
       <MobileActions
         actionsRef={actionsRef}
-        show={!inView}
+        show={hasPassedActions}
         product={product}
         variant={selectedVariant}
         isAdding={isAdding}

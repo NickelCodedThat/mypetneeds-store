@@ -43,7 +43,7 @@ const Addresses = ({
     <div className="bg-white">
       <div className="flex flex-row items-center justify-between mb-6">
         <Heading
-          level="h2"
+          level="h1"
           className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
         >
           Shipping Address
@@ -53,7 +53,7 @@ const Addresses = ({
           <Text>
             <button
               onClick={handleEdit}
-              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+              className="focus-ring inline-flex items-center min-h-11 px-2 rounded-md text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
               data-testid="edit-address-button"
             >
               Edit

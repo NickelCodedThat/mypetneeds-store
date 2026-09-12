@@ -33,7 +33,7 @@ export default async function Footer() {
                 {primaryCategories.map((category) => (
                   <li key={category.id}>
                     <LocalizedClientLink
-                      className="focus-ring inline-flex items-center min-h-11 rounded-md hover:text-brand"
+                      className="focus-ring inline-flex items-center min-h-11 min-w-11 rounded-md hover:text-brand"
                       href={`/categories/${category.handle}`}
                       data-testid="footer-category-link"
                     >

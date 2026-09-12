@@ -22,7 +22,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" data-mode="light" className={splineSans.variable}>
       <body className="font-sans">
-        <main className="relative">{props.children}</main>
+        {props.children}
       </body>
     </html>
   )

@@ -9,6 +9,12 @@ export default function CheckoutLayout({
 }) {
   return (
     <div className="w-full bg-page relative small:min-h-screen">
+      <a
+        href="#main-content"
+        className="focus-ring fixed left-4 top-4 z-[100] -translate-y-24 rounded-md bg-page px-4 py-3 text-button text-ink shadow-xl focus:translate-y-0"
+      >
+        Skip to main content
+      </a>
       <div className="h-16 bg-page border-b border-border">
         <nav className="flex h-full items-center content-container justify-between">
           <LocalizedClientLink
@@ -28,7 +34,14 @@ export default function CheckoutLayout({
           <div className="flex-1 basis-0" />
         </nav>
       </div>
-      <div className="relative" data-testid="checkout-container">{children}</div>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="relative"
+        data-testid="checkout-container"
+      >
+        {children}
+      </main>
     </div>
   )
 }

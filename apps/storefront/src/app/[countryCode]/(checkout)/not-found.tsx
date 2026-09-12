@@ -1,4 +1,4 @@
-import InteractiveLink from "@modules/common/components/interactive-link"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -13,7 +13,12 @@ export default async function NotFound() {
       <p className="text-small-regular text-ui-fg-base">
         The page you tried to access does not exist.
       </p>
-      <InteractiveLink href="/">Go to frontpage</InteractiveLink>
+      <LocalizedClientLink
+        href="/"
+        className="focus-ring inline-flex items-center min-h-11 px-4 rounded-md bg-brand text-white hover:bg-brand-hover"
+      >
+        Go to homepage
+      </LocalizedClientLink>
     </div>
   )
 }

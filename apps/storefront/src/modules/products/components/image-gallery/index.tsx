@@ -9,6 +9,7 @@ import { clx } from "@modules/common/components/ui"
 
 type ImageGalleryProps = {
   images: HttpTypes.StoreProductImage[]
+  productTitle: string
 }
 
 /**
@@ -18,7 +19,7 @@ type ImageGalleryProps = {
  * tokens, and the shared placeholder icon, never blank space or broken-
  * image chrome. When real images exist, only the first gets `priority`.
  */
-const ImageGallery = ({ images }: ImageGalleryProps) => {
+const ImageGallery = ({ images, productTitle }: ImageGalleryProps) => {
   const [activeIndex, setActiveIndex] = useState(0)
   const activeImage = images[activeIndex]
 
@@ -31,7 +32,11 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
         {activeImage?.url ? (
           <Image
             src={activeImage.url}
-            alt={`${images.length > 1 ? `Image ${activeIndex + 1} of ${images.length}` : "Product photo"}`}
+            alt={
+              images.length > 1
+                ? `${productTitle}, image ${activeIndex + 1} of ${images.length}`
+                : productTitle
+            }
             className="absolute inset-0 object-contain object-center p-[8%]"
             priority={activeIndex === 0}
             fill

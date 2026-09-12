@@ -1,6 +1,6 @@
 import { Heading, Text } from "@modules/common/components/ui"
 
-import InteractiveLink from "@modules/common/components/interactive-link"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 const EmptyCartMessage = () => {
   return (
@@ -12,11 +12,28 @@ const EmptyCartMessage = () => {
         Cart
       </Heading>
       <Text className="text-base-regular mt-4 mb-6 max-w-[32rem]">
-        You don&apos;t have anything in your cart. Let&apos;s change that, use
-        the link below to start browsing our products.
+        Your cart is empty. Browse practical essentials by pet or see the full
+        catalog.
       </Text>
-      <div>
-        <InteractiveLink href="/store">Explore products</InteractiveLink>
+      <div className="flex flex-wrap gap-3">
+        <LocalizedClientLink
+          href="/categories/dogs"
+          className="focus-ring inline-flex items-center min-h-11 px-4 rounded-md border border-border hover:bg-surface"
+        >
+          Shop dogs
+        </LocalizedClientLink>
+        <LocalizedClientLink
+          href="/categories/cats"
+          className="focus-ring inline-flex items-center min-h-11 px-4 rounded-md border border-border hover:bg-surface"
+        >
+          Shop cats
+        </LocalizedClientLink>
+        <LocalizedClientLink
+          href="/store"
+          className="focus-ring inline-flex items-center min-h-11 px-4 rounded-md bg-brand text-white hover:bg-brand-hover"
+        >
+          Shop all products
+        </LocalizedClientLink>
       </div>
     </div>
   )

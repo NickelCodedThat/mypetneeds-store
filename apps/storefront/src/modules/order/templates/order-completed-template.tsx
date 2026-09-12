@@ -2,7 +2,6 @@ import { Heading } from "@modules/common/components/ui"
 import { cookies as nextCookies } from "next/headers"
 
 import CartTotals from "@modules/common/components/cart-totals"
-import Help from "@modules/order/components/help"
 import Items from "@modules/order/components/items"
 import OnboardingCta from "@modules/order/components/onboarding-cta"
 import OrderDetails from "@modules/order/components/order-details"
@@ -44,7 +43,6 @@ export default async function OrderCompletedTemplate({
           <CartTotals totals={order} />
           <ShippingDetails order={order} />
           <PaymentDetails order={order} />
-          <Help />
         </div>
       </div>
     </div>

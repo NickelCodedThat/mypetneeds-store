@@ -83,7 +83,7 @@ const CartDropdown = ({
     >
       <LocalizedClientLink
         href="/cart"
-        className="focus-ring h-full inline-flex items-center min-h-11 px-2 rounded-md text-nav text-ink-muted hover:text-ink"
+        className="focus-ring h-full inline-flex items-center justify-center min-h-11 min-w-11 px-2 rounded-md text-nav text-ink-muted hover:text-ink"
         aria-label={`Cart, ${totalItems} item${totalItems === 1 ? "" : "s"}`}
         data-testid="nav-cart-link"
       >

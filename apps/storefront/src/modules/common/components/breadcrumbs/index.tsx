@@ -35,7 +35,7 @@ const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
               ) : (
                 <LocalizedClientLink
                   href={item.href}
-                  className="focus-ring inline-flex items-center rounded px-1 py-2 hover:text-ink"
+                  className="focus-ring inline-flex items-center min-h-11 rounded px-1 hover:text-ink"
                 >
                   {item.label}
                 </LocalizedClientLink>

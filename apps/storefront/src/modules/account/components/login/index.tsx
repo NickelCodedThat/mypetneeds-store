@@ -62,7 +62,7 @@ const Login = ({ setCurrentView }: Props) => {
         Not a member?{" "}
         <button
           onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
-          className="underline"
+          className="focus-ring inline-flex items-center min-h-11 px-1 rounded underline"
           data-testid="register-button"
         >
           Join us

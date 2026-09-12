@@ -46,7 +46,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         </div>
 
         <div className="order-2 small:order-2 small:col-start-1 small:row-start-1 small:row-span-2 small:sticky small:top-24 mb-6 small:mb-0">
-          <ImageGallery images={images} />
+          <ImageGallery images={images} productTitle={product.title} />
         </div>
 
         <div className="order-3 small:order-3 small:col-start-2 small:row-start-2 flex flex-col gap-y-8">

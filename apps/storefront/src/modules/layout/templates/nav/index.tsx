@@ -62,7 +62,7 @@ export default async function Nav() {
                 <LocalizedClientLink
                   href="/cart"
                   aria-label="Cart, 0 items"
-                  className="focus-ring inline-flex items-center min-h-11 px-2 rounded-md text-nav text-ink-muted hover:text-ink"
+                  className="focus-ring inline-flex items-center justify-center min-h-11 min-w-11 px-2 rounded-md text-nav text-ink-muted hover:text-ink"
                   data-testid="nav-cart-link"
                 >
                   <span className="hidden small:inline" aria-hidden="true">
