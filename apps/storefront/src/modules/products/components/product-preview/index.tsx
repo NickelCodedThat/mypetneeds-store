@@ -26,13 +26,13 @@ function isProductOutOfStock(product: HttpTypes.StoreProduct): boolean {
   }
 
   return variants.every((variant) => {
-    if (variant.manage_inventory == null) {
+    if (variant.manage_inventory == null || variant.inventory_quantity == null) {
       return false
     }
     if (!variant.manage_inventory || variant.allow_backorder) {
       return false
     }
-    return (variant.inventory_quantity ?? 0) <= 0
+    return variant.inventory_quantity <= 0
   })
 }
 
