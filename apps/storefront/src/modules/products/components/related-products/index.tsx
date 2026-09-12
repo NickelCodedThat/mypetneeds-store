@@ -3,6 +3,10 @@ import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
 import Product from "../product-preview"
 
+// Approved Gate 2B.6 cap - never more than this many, regardless of how
+// many products the existing selection heuristic would otherwise return.
+const RELATED_PRODUCTS_LIMIT = 4
+
 type RelatedProductsProps = {
   product: HttpTypes.StoreProduct
   countryCode: string
@@ -18,8 +22,12 @@ export default async function RelatedProducts({
     return null
   }
 
-  // edit this function to define your related products logic
-  const queryParams: HttpTypes.StoreProductListParams = {}
+  // Existing selection heuristic, unchanged: same collection, else shared
+  // tags. Request one extra so filtering out the current product still
+  // leaves a full set where possible.
+  const queryParams: HttpTypes.StoreProductListParams = {
+    limit: RELATED_PRODUCTS_LIMIT + 1,
+  }
   if (region?.id) {
     queryParams.region_id = region.id
   }
@@ -37,9 +45,9 @@ export default async function RelatedProducts({
     queryParams,
     countryCode,
   }).then(({ response }) => {
-    return response.products.filter(
-      (responseProduct) => responseProduct.id !== product.id
-    )
+    return response.products
+      .filter((responseProduct) => responseProduct.id !== product.id)
+      .slice(0, RELATED_PRODUCTS_LIMIT)
   })
 
   if (!products.length) {
@@ -47,17 +55,12 @@ export default async function RelatedProducts({
   }
 
   return (
-    <div className="product-page-constraint">
-      <div className="flex flex-col items-center text-center mb-16">
-        <span className="text-base-regular text-gray-600 mb-6">
-          Related products
-        </span>
-        <p className="text-2xl-regular text-ui-fg-base max-w-lg">
-          You might also want to check out these products.
-        </p>
+    <div className="content-container">
+      <div className="flex flex-col items-center text-center mb-10">
+        <h2 className="text-h2 text-ink">More for everyday care</h2>
       </div>
 
-      <ul className="grid grid-cols-2 md:grid-cols-3 small:grid-cols-4 large:grid-cols-5 gap-x-3 gap-y-8 small:gap-x-6 small:gap-y-10">
+      <ul className="grid grid-cols-2 small:grid-cols-4 gap-x-3 gap-y-8 small:gap-x-6 small:gap-y-10">
         {products.map((product) => (
           <li key={product.id}>
             <Product region={region} product={product} />

@@ -8,6 +8,8 @@ type OptionSelectProps = {
   updateOption: (title: string, value: string) => void
   title: string
   disabled: boolean
+  /** Values with no matching variant given the other selected options. */
+  unavailableValues?: string[]
   "data-testid"?: string
 }
 
@@ -18,38 +20,47 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   title,
   "data-testid": dataTestId,
   disabled,
+  unavailableValues = [],
 }) => {
-  const filteredOptions = (option.values ?? []).map((v) => v.value)
+  const values = (option.values ?? []).map((v) => v.value)
 
   return (
-    <div className="flex flex-col gap-y-3">
-      <span className="text-sm">Select {title}</span>
+    <fieldset className="flex flex-col gap-y-3">
+      <legend className="text-supporting text-ink-muted">{title}</legend>
       <div
-        className="flex flex-wrap justify-between gap-2"
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label={title}
         data-testid={dataTestId}
       >
-        {filteredOptions.map((v) => {
+        {values.map((value) => {
+          const isSelected = value === current
+          const isUnavailable = unavailableValues.includes(value)
+
           return (
             <button
-              onClick={() => updateOption(option.id, v)}
-              key={v}
+              type="button"
+              onClick={() => updateOption(option.id, value)}
+              key={value}
+              aria-pressed={isSelected}
+              aria-disabled={isUnavailable || undefined}
+              disabled={disabled || isUnavailable}
               className={clx(
-                "border-ui-border-base bg-ui-bg-subtle border text-small-regular h-10 rounded-rounded p-2 flex-1 ",
-                {
-                  "border-ui-border-interactive": v === current,
-                  "hover:shadow-elevation-card-rest transition-shadow ease-in-out duration-150":
-                    v !== current,
-                }
+                "focus-ring min-h-11 min-w-11 px-4 rounded-md text-nav transition-colors duration-150 ease-out",
+                isSelected
+                  ? "border-2 border-brand text-ink font-semibold"
+                  : "border border-border text-ink hover:bg-surface",
+                isUnavailable &&
+                  "text-ink-muted line-through pointer-events-none opacity-60"
               )}
-              disabled={disabled}
               data-testid="option-button"
             >
-              {v}
+              {value}
             </button>
           )
         })}
       </div>
-    </div>
+    </fieldset>
   )
 }
 

@@ -1,38 +1,30 @@
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Text } from "@modules/common/components/ui"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Breadcrumbs, { BreadcrumbItem } from "@modules/common/components/breadcrumbs"
 
 type ProductInfoProps = {
   product: HttpTypes.StoreProduct
 }
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
-  return (
-    <div id="product-info">
-      <div className="flex flex-col gap-y-4 lg:max-w-[500px] mx-auto">
-        {product.collection && (
-          <LocalizedClientLink
-            href={`/collections/${product.collection.handle}`}
-            className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
-          >
-            {product.collection.title}
-          </LocalizedClientLink>
-        )}
-        <Heading
-          level="h2"
-          className="text-3xl leading-10 text-ui-fg-base"
-          data-testid="product-title"
-        >
-          {product.title}
-        </Heading>
+  // Product categories aren't requested by the shared product-list query
+  // (adding them would mean a new field for this slice alone), so the
+  // breadcrumb gracefully falls back to Home / Product Name when absent.
+  const category = product.categories?.[0]
 
-        <Text
-          className="text-medium text-ui-fg-subtle whitespace-pre-line"
-          data-testid="product-description"
-        >
-          {product.description}
-        </Text>
-      </div>
+  const breadcrumb: BreadcrumbItem[] = [
+    { label: "Home", href: "/" },
+    ...(category
+      ? [{ label: category.name, href: `/categories/${category.handle}` }]
+      : []),
+    { label: product.title, href: `/products/${product.handle}` },
+  ]
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Breadcrumbs items={breadcrumb} />
+      <h1 className="text-h1 text-ink" data-testid="product-title">
+        {product.title}
+      </h1>
     </div>
   )
 }

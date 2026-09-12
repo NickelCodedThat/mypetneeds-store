@@ -4,7 +4,6 @@ import { addToCart } from "@lib/data/cart"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
-import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
 import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
@@ -38,7 +37,10 @@ export default function ProductActions({
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
+  const [addToCartError, setAddToCartError] = useState<string | null>(null)
   const countryCode = useParams().countryCode as string
+
+  const hasMultipleVariants = (product.variants?.length ?? 0) > 1
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -61,6 +63,7 @@ export default function ProductActions({
 
   // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
+    setAddToCartError(null)
     setOptions((prev) => ({
       ...prev,
       [optionId]: value,
@@ -74,6 +77,28 @@ export default function ProductActions({
       return isEqual(variantOptions, options)
     })
   }, [product.variants, options])
+
+  // For each option group, which values have no matching variant given the
+  // *other* currently selected options - lets the UI show them as
+  // unavailable instead of only failing silently after the fact.
+  const unavailableValuesByOption = useMemo(() => {
+    const result: Record<string, string[]> = {}
+
+    for (const option of product.options ?? []) {
+      const values = option.values?.map((v) => v.value) ?? []
+      const otherOptions = { ...options }
+      delete otherOptions[option.id]
+
+      result[option.id] = values.filter((value) => {
+        const candidate = { ...otherOptions, [option.id]: value }
+        return !product.variants?.some((v) =>
+          isEqual(optionsAsKeymap(v.options), candidate)
+        )
+      })
+    }
+
+    return result
+  }, [product.options, product.variants, options])
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString())
@@ -125,75 +150,98 @@ export default function ProductActions({
     if (!selectedVariant?.id) return null
 
     setIsAdding(true)
+    setAddToCartError(null)
 
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: 1,
-      countryCode,
-    })
-
-    setIsAdding(false)
+    try {
+      await addToCart({
+        variantId: selectedVariant.id,
+        quantity: 1,
+        countryCode,
+      })
+    } catch {
+      setAddToCartError(
+        "We couldn't add this to your cart. Please try again."
+      )
+    } finally {
+      setIsAdding(false)
+    }
   }
 
+  const firstOptionTitle = product.options?.[0]?.title?.toLowerCase()
+
+  const buttonLabel = !selectedVariant
+    ? firstOptionTitle
+      ? `Choose a ${firstOptionTitle}`
+      : "Select an option"
+    : !inStock || !isValidVariant
+    ? "Out of stock"
+    : "Add to cart"
+
   return (
-    <>
-      <div className="flex flex-col gap-y-2" ref={actionsRef}>
-        <div>
-          {(product.variants?.length ?? 0) > 1 && (
-            <div className="flex flex-col gap-y-4">
-              {(product.options || []).map((option) => {
-                return (
-                  <div key={option.id}>
-                    <OptionSelect
-                      option={option}
-                      current={options[option.id]}
-                      updateOption={setOptionValue}
-                      title={option.title ?? ""}
-                      data-testid="product-options"
-                      disabled={!!disabled || isAdding}
-                    />
-                  </div>
-                )
-              })}
-              <Divider />
-            </div>
-          )}
+    <div className="flex flex-col gap-y-4" ref={actionsRef}>
+      <ProductPrice product={product} variant={selectedVariant} />
+
+      {hasMultipleVariants && (
+        <div className="flex flex-col gap-y-4">
+          {(product.options || []).map((option) => (
+            <OptionSelect
+              key={option.id}
+              option={option}
+              current={options[option.id]}
+              updateOption={setOptionValue}
+              title={option.title ?? ""}
+              data-testid="product-options"
+              disabled={!!disabled || isAdding}
+              unavailableValues={unavailableValuesByOption[option.id]}
+            />
+          ))}
         </div>
+      )}
 
-        <ProductPrice product={product} variant={selectedVariant} />
-
-        <Button
-          onClick={handleAddToCart}
-          disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
-          }
-          variant="primary"
-          className="w-full h-10"
-          isLoading={isAdding}
-          data-testid="add-product-button"
+      {selectedVariant && (
+        <p
+          className="text-supporting text-ink-muted"
+          data-testid="inventory-message"
         >
-          {!selectedVariant
-            ? "Select variant"
-            : !inStock || !isValidVariant
-            ? "Out of stock"
-            : "Add to cart"}
-        </Button>
-        <MobileActions
-          product={product}
-          variant={selectedVariant}
-          options={options}
-          updateOptions={setOptionValue}
-          inStock={inStock}
-          handleAddToCart={handleAddToCart}
-          isAdding={isAdding}
-          show={!inView}
-          optionsDisabled={!!disabled || isAdding}
-        />
-      </div>
-    </>
+          {inStock ? "In stock" : "Out of stock"}
+        </p>
+      )}
+
+      <Button
+        onClick={handleAddToCart}
+        disabled={
+          !inStock || !selectedVariant || !!disabled || isAdding || !isValidVariant
+        }
+        variant="primary"
+        className="w-full"
+        isLoading={isAdding}
+        data-testid="add-product-button"
+      >
+        {buttonLabel}
+      </Button>
+
+      {addToCartError && (
+        <p role="alert" className="text-supporting text-error">
+          {addToCartError}
+        </p>
+      )}
+
+      <p className="text-supporting text-ink-muted">
+        Shipping options are shown at checkout.
+      </p>
+
+      <MobileActions
+        actionsRef={actionsRef}
+        show={!inView}
+        product={product}
+        variant={selectedVariant}
+        isAdding={isAdding}
+        buttonLabel={buttonLabel}
+        disabled={
+          !inStock || !selectedVariant || !!disabled || isAdding || !isValidVariant
+        }
+        onAddToCart={handleAddToCart}
+      />
+    </div>
   )
 }
