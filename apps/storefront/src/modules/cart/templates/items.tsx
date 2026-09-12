@@ -1,9 +1,9 @@
 import repeat from "@lib/util/repeat"
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Table } from "@modules/common/components/ui"
+import { Heading, Text } from "@modules/common/components/ui"
 
 import Item from "@modules/cart/components/item"
-import SkeletonLineItem from "@modules/skeletons/components/skeleton-line-item"
+import SkeletonCartLineItem from "@modules/skeletons/components/skeleton-cart-line-item"
 
 type ItemsTemplateProps = {
   cart?: HttpTypes.StoreCart
@@ -11,6 +11,7 @@ type ItemsTemplateProps = {
 
 const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
   const items = cart?.items
+
   return (
     <div>
       <div className="pb-3 flex items-center">
@@ -18,40 +19,38 @@ const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
           Cart
         </Heading>
       </div>
-      <Table>
-        <Table.Header className="border-t-0">
-          <Table.Row className="text-ui-fg-subtle txt-medium-plus">
-            <Table.HeaderCell className="!pl-0">Item</Table.HeaderCell>
-            <Table.HeaderCell></Table.HeaderCell>
-            <Table.HeaderCell>Quantity</Table.HeaderCell>
-            <Table.HeaderCell className="hidden small:table-cell">
-              Price
-            </Table.HeaderCell>
-            <Table.HeaderCell className="!pr-0 text-right">
-              Total
-            </Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {items
-            ? items
-                .sort((a, b) => {
-                  return (a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1
-                })
-                .map((item) => {
-                  return (
-                    <Item
-                      key={item.id}
-                      item={item}
-                      currencyCode={cart?.currency_code}
-                    />
-                  )
-                })
-            : repeat(5).map((i) => {
-                return <SkeletonLineItem key={i} />
-              })}
-        </Table.Body>
-      </Table>
+
+      {/* Desktop-only column labels; each mobile card self-labels visually. */}
+      <div
+        className="hidden small:flex items-center gap-4 pb-3 border-b border-border txt-medium-plus text-ui-fg-subtle"
+        aria-hidden="true"
+      >
+        <div className="w-24 shrink-0" />
+        <Text className="flex-1">Product</Text>
+        <Text className="w-32 medium:w-40 shrink-0">Quantity</Text>
+        <Text className="w-20 medium:w-28 shrink-0 text-right">Unit price</Text>
+        <Text className="w-20 medium:w-28 shrink-0 text-right">Total</Text>
+      </div>
+
+      <ul>
+        {items
+          ? items
+              .sort((a, b) => {
+                return (a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1
+              })
+              .map((item) => {
+                return (
+                  <Item
+                    key={item.id}
+                    item={item}
+                    currencyCode={cart?.currency_code}
+                  />
+                )
+              })
+          : repeat(5).map((i) => {
+              return <SkeletonCartLineItem key={i} />
+            })}
+      </ul>
     </div>
   )
 }
